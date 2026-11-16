@@ -169,6 +169,7 @@ async function init() {
     index = await json('./index.json');
     entries = index.entries.map(row => ({ row, search: normalize([row[0], row[1], ...row[3]].join(' ')) }));
     $('coverage').textContent = `${fmt.format(index.reports)} reports · ${index.from} to ${index.to} · Source export ${index.sourceDate}`;
+    $('snapshot-note').hidden = index.snapshotKind !== 'bundled';
     for (const [field, labels] of [['institution',index.institutions],['subject',index.subjects]]) {
       const used = new Set(index.entries.flatMap(r => r[field === 'institution' ? 4 : 5]));
       const opts = labels.map((name, id) => [name, id]).filter(([,id]) => used.has(id)).sort((a, b) => a[0].localeCompare(b[0]));

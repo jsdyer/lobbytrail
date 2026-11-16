@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en-CA"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lobby Trail · CoolCode.ca</title><meta name="description" content="Trace Canadian federal lobbying reports by organization, institution, subject and date.">
+<link rel="stylesheet" href="./style.css"></head><body>
+<a class="skip" href="#main">Skip to search</a>
+<header><nav class="wrap mast" aria-label="Site"><a href="https://coolcode.ca/#workbench"><span class="tag" aria-hidden="true">&gt;_</span>CoolCode.ca</a><a href="https://lobbycanada.gc.ca/en/open-data/">Official open data ↗</a></nav>
+<div class="hero"><div class="wrap"><h1>Lobby Trail</h1><p>Follow Canada's federal lobbying disclosures by corporation, organization, institution and subject. Open the original report when you find a lead.</p></div></div></header>
+<main id="main" class="wrap">
+<section class="panel" aria-label="Lobbying report scope"><div id="coverage" class="metadata">Opening the official report index…</div><p class="muted">Covers in-house registrations. Reports describe arranged oral communications disclosed under the Lobbying Act. Subject or institution appearances can overlap within one report.</p></section>
+<div class="split" style="margin-top:1rem">
+  <section class="panel" aria-labelledby="org-heading">
+    <h2 id="org-heading">Organizations</h2>
+    <label>Find by name or registry ID<input type="search" id="query" placeholder="e.g. Bell Canada" maxlength="120"></label>
+    <div class="samples" aria-label="Example searches"><button type="button" data-query="Bell Canada">Bell</button><button type="button" data-query="Rogers">Rogers</button><button type="button" data-query="Canadian Bankers Association">CBA</button></div>
+    <div class="list"><label>Reported institution<select id="institution"><option value="">Any institution</option></select></label><label>Reported subject<select id="subject"><option value="">Any subject</option></select></label></div>
+    <p id="list-status" class="status" role="status"></p><div id="organizations" class="list" aria-label="Matching organizations"></div><button id="more-orgs" type="button" hidden>More organizations</button>
+  </section>
+  <section class="panel" id="detail" aria-label="Organization reports"><p class="empty" id="placeholder">Choose an organization to see its report history.</p><div id="report-view" hidden>
+    <p class="metadata" id="report-label"></p><h2 id="org-title" tabindex="-1"></h2>
+    <label>Communication year<select id="year"><option value="">All years</option></select></label>
+    <p class="status" id="report-status" role="status"></p>
+    <div class="metrics" id="metrics"></div>
+    <details open><summary>Report history by year</summary><div id="history" class="barlist"></div></details>
+    <details><summary>Most frequently named institutions</summary><div id="institutions" class="barlist"></div></details>
+    <details><summary>Most frequently named subject areas</summary><div id="subjects" class="barlist"></div></details>
+    <div class="actions"><button type="button" id="export">Download report CSV</button><button type="button" id="share">Copy link</button></div>
+    <div class="table-wrap"><table><thead><tr><th>Date</th><th>Institutions and subjects</th><th>Official report</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <nav id="paging" class="pagination" aria-label="Report pages"><button type="button" id="previous">Previous</button><span id="page-status" class="metadata"></span><button type="button" id="next">Next</button></nav>
+  </div></section>
+</div></main>
+<footer><div class="wrap">Contains information licensed under the <a href="https://lobbycanada.gc.ca/en/open-data/open-data-licence-agreement/">Open Data Licence Agreement — Office of the Commissioner of Lobbying</a>. Personal names and free-text details are omitted. Where an amendment identifies an earlier report, the earlier ID is excluded. This is an independent explorer. <a href="https://github.com/jsdyer/lobbytrail">Project source</a></div></footer>
+<script type="module" src="./app.mjs"></script></body></html>

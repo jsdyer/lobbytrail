@@ -1,0 +1,41 @@
+name: Refresh federal lobbying data
+
+on:
+  schedule:
+    - cron: '37 15 * * 2'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - scripts/build.py
+      - .github/workflows/refresh.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lobbying-source-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+      - name: Retrieve and validate the official export
+        run: python3 scripts/build.py --refresh-seed
+      - name: Commit the verified data
+        run: |
+          git add -A data/seed
+          if ! git diff --cached --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'Refresh verified federal lobbying disclosures'
+            git push origin HEAD:main
+          fi

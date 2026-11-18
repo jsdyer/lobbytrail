@@ -4,8 +4,10 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  schedule:
-    - cron: '37 15 * * 2'
+  workflow_run:
+    workflows: ['Refresh federal lobbying data']
+    branches: [main]
+    types: [completed]
 
 permissions:
   contents: read
@@ -16,29 +18,21 @@ concurrency:
 
 jobs:
   build:
+    if: github.ref == 'refs/heads/main' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
         with:
+          ref: main
           persist-credentials: false
       - uses: actions/configure-pages@v5
-      - name: Build the static application
+      - name: Test refresh and fallback paths
+        run: python3 -m unittest discover -s tests
+      - name: Build the static application from verified data
         run: |
-          if test -f requirements.txt; then
-            python3 -m venv "$RUNNER_TEMP/app-venv"
-            . "$RUNNER_TEMP/app-venv/bin/activate"
-            python3 -m pip install -r requirements.txt
-          fi
-          python3 scripts/build.py
+          python3 scripts/build.py --seed
           test -s dist/index.html
-      - name: Run application tests
-        run: |
-          shopt -s nullglob
-          tests=(tests/*.test.mjs tests/*.test.cjs)
-          if (( ${#tests[@]} )); then
-            node --test "${tests[@]}"
-          fi
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist

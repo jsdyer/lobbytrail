@@ -1,0 +1,23 @@
+{
+  "id": "lobbytrail",
+  "title": "Lobby Trail",
+  "description": "Explore reported federal lobbying communications by organization, subject and institution.",
+  "category": "disclosures",
+  "tags": [
+    "lobbying",
+    "communication",
+    "canada",
+    "federal",
+    "influence"
+  ],
+  "icon": "messages-square",
+  "url": "/lobbytrail/",
+  "source": "https://github.com/jsdyer/lobbytrail",
+  "hosting": "project",
+  "access": "browser",
+  "data_info": {
+    "mode": "snapshot",
+    "detail": "Federal lobbying reports identify the organizations reporting in-house communications with public office holders.",
+    "cadence": "Weekly"
+  }
+}

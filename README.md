@@ -10,6 +10,51 @@ The [Office of the Commissioner of Lobbying](https://lobbycanada.gc.ca/en/open-d
 
 Run `python3 scripts/build.py` and serve `dist/` over HTTP. Pass `--input /path/to/communications.zip` to rebuild from a saved official download. Pass `--seed` to use the bundled snapshot explicitly. Python's standard library is sufficient. The organization directory loads once; the browser fetches just the compact report shard for a selected organization.
 
+## Publish a file downloaded in your browser
+
+Download the [official communication reports ZIP](https://lobbycanada.gc.ca/media/mqbbmaqk/communications_ocl_cal.zip)
+through your browser and keep it zipped. Copy it to the computer holding your Git
+checkout, for example `/root/coolcode-imports/communications_ocl_cal.zip` on Linux.
+Record when you actually downloaded it, including the timezone. The import works
+offline and never attempts the blocked source URL.
+
+From an up-to-date checkout, run the following commands one at a time and stop if
+any fails. **Replace the example download time with the real one.**
+
+```sh
+git pull --ff-only
+python3 scripts/import_snapshot.py /root/coolcode-imports/communications_ocl_cal.zip --retrieved-at '2026-11-24T06:00:00-07:00'
+python3 -m unittest discover -s tests
+python3 scripts/build.py --seed
+git diff -- data/seed/manifest.json
+git status --short
+git add -A data/seed
+git commit -m 'Import verified browser-downloaded lobbying data'
+git push origin main
+```
+
+On Windows with Git and Python installed, the same commands work from the checkout:
+use `py` instead of `python3` and a quoted Windows path for the ZIP. Use your existing
+GitHub login for the push. Do not upload the raw ZIP or the generated `dist/` directory
+to the repository. The new compact archive, its manifest and the deletion of the
+previous compact archive must be committed together.
+
+The importer runs the existing report parser and completeness checks, validates the
+saved snapshot, and rejects an older export, a download older than the last verified
+check, an invalid date or a future date. A failed import leaves the committed snapshot
+untouched. Source export and acquisition timestamps remain separate. A newly downloaded
+but unchanged export is still a real new acquisition; it can be saved with its real time.
+
+The existing Pages workflow tests and publishes this data-only push without downloading
+the source again. Verify the [Pages run](https://github.com/jsdyer/lobbytrail/actions/workflows/pages.yml)
+and the live [index metadata](https://coolcode.ca/lobbytrail/index.json).
+`build.py --input` remains a local preview command; **use `import_snapshot.py` to save
+the data for publication**. A manual publication does not prove the online collector
+has recovered, so the watchdog may continue its six-hour recovery attempts.
+
+See the [shared manual-import guide](https://github.com/jsdyer/jsdyer.github.io/blob/main/docs/manual-data-import.md)
+for Census Lens and the procedure for other tools.
+
 Every Tuesday GitHub Actions requests the official export and checks its schema and organization totals before saving a new snapshot on main. A blocked download, invalid archive or older source edition fails the refresh job and leaves the published data in place. Actions also supports a manual refresh. Pushes build and publish from the verified data already in the repository, so a code update works offline. The site reports the source export date, actual UTC retrieval date and communication date range separately.
 
 The default local build tries the official download, and uses the last verified snapshot if the source is unavailable. `python3 scripts/build.py --refresh-seed` requires a successful online acquisition and updates `data/seed/` on a changed export. It can also be run from a machine with ordinary public access when the Registry denies a hosted runner's request. Commit the resulting manifest and its data archive together. Its SHA-256 is checked before the offline build copies its index and 64 filtered shards. Run `python3 -m unittest discover -s tests` to check the acquisition and validation paths.

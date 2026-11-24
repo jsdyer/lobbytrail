@@ -28,3 +28,5 @@ This is an interim mitigation, not a scheduling guarantee: GitHub does not docum
 ## Published freshness
 
 `index.json.checkedAt` records the last successful online validation, even when the source ZIP is unchanged. The seed manifest preserves this check time without rewriting the data archive. Offline/fallback builds reuse that time (or the original `retrievedAt` for older seeds); they never stamp old data as newly checked.
+
+Source requests are bounded by time and size. If the primary HTTPS client has a transport error or a 403/429/server response, the collector tries the same public URL with curl (installed on GitHub runners; optional locally). TLS verification remains enabled. Both clients must obtain a valid response and the existing data validation must pass before a successful check is recorded. If both fail, the previous publication keeps its original dates.

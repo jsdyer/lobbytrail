@@ -14,6 +14,7 @@ from tempfile import TemporaryDirectory
 from time import sleep
 from urllib.error import URLError
 from urllib.request import Request, urlopen
+from public_download import download_bytes
 from zipfile import BadZipFile, ZIP_DEFLATED, ZipFile, ZipInfo
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -24,18 +25,7 @@ SEED_LIMIT = 18_000_000
 
 
 def download():
-    request = Request(SOURCE, headers={"User-Agent": "CoolCode Lobby Trail"})
-    for attempt in range(3):
-        try:
-            with urlopen(request, timeout=100) as response:
-                data = response.read(LIMIT + 1)
-            if len(data) > LIMIT:
-                raise ValueError("Communication archive exceeded the expected size")
-            return data
-        except (URLError, TimeoutError, IncompleteRead):
-            if attempt == 2:
-                raise
-            sleep(2 ** attempt)
+    return download_bytes(SOURCE, limit=LIMIT, timeout=100)
 
 
 def rows(archive, name, columns):

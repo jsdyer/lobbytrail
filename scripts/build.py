@@ -121,6 +121,7 @@ def restore_seed():
             raise ValueError("Bundled export date differs from its manifest")
         dist = prepare_output()
         index["snapshotKind"] = "bundled"
+        index["checkedAt"] = manifest.get("checkedAt", index.get("retrievedAt"))
         write(dist / "index.json", index)
         for i in range(BUCKETS):
             name = f"data/{i}.json"
@@ -143,7 +144,7 @@ def preserve_snapshot(index, source_hash):
             validate_seed(archive)
         previous = archive_path(seed, seed_manifest())
         manifest = {"sha256": sha256(payload).hexdigest(), "sourceDate": index["sourceDate"],
-                    "sourceSha256": source_hash}
+                    "sourceSha256": source_hash, "checkedAt": index.get("checkedAt")}
         destination = archive_path(seed, manifest)
         (staged / "snapshot.zip").write_bytes(payload)
         (staged / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
@@ -232,6 +233,7 @@ def build(archive, retrieved=None):
     }
     if retrieved:
         index["retrievedAt"] = retrieved
+        index["checkedAt"] = retrieved
     write(dist / "index.json", index)
     for i, shard in enumerate(shards):
         write(dist / "data" / f"{i}.json", shard)
@@ -265,7 +267,15 @@ def main():
         if args.refresh_seed:
             if source_hash == manifest["sourceSha256"]:
                 restore_seed()  # verify the retained archive before declaring success
-                print("Official archive is unchanged")
+                manifest["checkedAt"] = index["checkedAt"]
+                target = ROOT / "data/seed/manifest.json"
+                temporary = target.with_suffix(".tmp")
+                temporary.write_text(json.dumps(manifest, indent=2) + "\n")
+                temporary.replace(target)
+                restored = json.loads((ROOT / "dist/index.json").read_text())
+                restored["checkedAt"] = index["checkedAt"]
+                write(ROOT / "dist/index.json", restored)
+                print("Official archive is unchanged; successful check recorded")
             else:
                 preserve_snapshot(index, source_hash)
     except (URLError, TimeoutError, IncompleteRead, BadZipFile, KeyError, ValueError) as exc:

@@ -67,6 +67,30 @@ class RefreshTests(unittest.TestCase):
             self.assertGreaterEqual(index["retrievedAt"][:10], index["sourceDate"])
             self.assertEqual(len(list((root / "dist/data").glob("*.json"))), build.BUCKETS)
 
+    def test_unchanged_archive_persists_check_without_rewriting_capture(self):
+        import shutil
+        from hashlib import sha256
+        stub=io.BytesIO()
+        with ZipFile(stub,"w") as archive:
+            archive.writestr("unused","stub")
+        with TemporaryDirectory() as tmp:
+            root=Path(tmp); (root/"web").mkdir(); (root/"data").mkdir()
+            shutil.copytree(build.ROOT/"data/seed",root/"data/seed")
+            target=root/"data/seed/manifest.json"
+            manifest=json.loads(target.read_text())
+            manifest["sourceSha256"]=sha256(stub.getvalue()).hexdigest()
+            target.write_text(json.dumps(manifest))
+            original=(root/"data/seed"/(manifest["sha256"]+".zip")).read_bytes()
+            stamp="2026-11-24T09:00:00+00:00"
+            with patch.object(build,"ROOT",root),patch.object(sys,"argv",["build.py","--refresh-seed"]),patch.object(build,"download",return_value=stub.getvalue()),patch.object(build,"build",return_value={"sourceDate":manifest["sourceDate"],"checkedAt":stamp}):
+                build.main()
+            self.assertEqual(json.loads(target.read_text())["checkedAt"],stamp)
+            self.assertEqual((root/"data/seed"/(manifest["sha256"]+".zip")).read_bytes(),original)
+            with patch.object(build,"ROOT",root):build.restore_seed()
+            index=json.loads((root/"dist/index.json").read_text())
+            self.assertEqual(index["checkedAt"],stamp)
+            self.assertNotEqual(index["retrievedAt"],stamp)
+
     def test_incomplete_official_export_cannot_become_the_new_snapshot(self):
         stub = io.BytesIO()
         with ZipFile(stub, "w") as archive:
